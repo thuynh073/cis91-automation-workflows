@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Build the 'JH - Data Scraper & Formatter' workflow JSON and print it to stdout.
+"""Build the 'JH - Data Scraper & Formatter' workflow JSON and write it to
+labs/week05/data-scraper-formatter.json (or print to stdout with --stdout).
 
 No secrets live in this file: the n8n API key is read from $N8N_API_KEY at
 push time (see push.sh), and only Data Table IDs appear below.

@@ -1,5 +1,5 @@
 {
-  "name": "JH - Data Scraper & Formatter",
+  "name": "Data Scraper & Formatter",
   "nodes": [
     {
       "parameters": {},
@@ -8,7 +8,7 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        -220,
+        -224,
         0
       ]
     },
@@ -17,7 +17,6 @@
         "rule": {
           "interval": [
             {
-              "field": "days",
               "triggerAtHour": 9
             }
           ]
@@ -28,8 +27,8 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
-        -220,
-        200
+        -224,
+        208
       ]
     },
     {
@@ -43,7 +42,7 @@
       "typeVersion": 4.2,
       "position": [
         0,
-        60
+        64
       ]
     },
     {
@@ -66,8 +65,8 @@
       "type": "n8n-nodes-base.html",
       "typeVersion": 1.2,
       "position": [
-        220,
-        60
+        224,
+        64
       ]
     },
     {
@@ -80,8 +79,8 @@
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
       "position": [
-        440,
-        60
+        448,
+        64
       ]
     },
     {
@@ -119,8 +118,8 @@
       "type": "n8n-nodes-base.html",
       "typeVersion": 1.2,
       "position": [
-        660,
-        60
+        672,
+        64
       ]
     },
     {
@@ -133,7 +132,7 @@
       "typeVersion": 2,
       "position": [
         880,
-        60
+        64
       ]
     },
     {
@@ -141,8 +140,7 @@
         "sortFieldsUi": {
           "sortField": [
             {
-              "fieldName": "price",
-              "order": "ascending"
+              "fieldName": "price"
             }
           ]
         },
@@ -153,8 +151,8 @@
       "type": "n8n-nodes-base.sort",
       "typeVersion": 1,
       "position": [
-        1100,
-        60
+        1104,
+        64
       ]
     },
     {
@@ -187,8 +185,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1320,
-        60
+        1328,
+        64
       ]
     },
     {
@@ -212,8 +210,8 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1,
       "position": [
-        1540,
-        -60
+        1552,
+        -64
       ]
     },
     {
@@ -225,7 +223,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1540,
+        1552,
         160
       ]
     },
