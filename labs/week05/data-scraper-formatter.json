@@ -2,7 +2,6 @@
   "name": "Data Scraper & Formatter",
   "nodes": [
     {
-      "parameters": {},
       "id": "b14fc8ef-d4f4-4383-9b7f-5bc52aef05e3",
       "name": "Manual Trigger",
       "type": "n8n-nodes-base.manualTrigger",
@@ -10,9 +9,18 @@
       "position": [
         -224,
         0
-      ]
+      ],
+      "parameters": {}
     },
     {
+      "id": "3f0faa1e-4354-4bf4-94fa-ca9e1c78fae6",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -224,
+        208
+      ],
       "parameters": {
         "rule": {
           "interval": [
@@ -21,21 +29,9 @@
             }
           ]
         }
-      },
-      "id": "3f0faa1e-4354-4bf4-94fa-ca9e1c78fae6",
-      "name": "Schedule Trigger",
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.2,
-      "position": [
-        -224,
-        208
-      ]
+      }
     },
     {
-      "parameters": {
-        "url": "https://books.toscrape.com",
-        "options": {}
-      },
       "id": "e495f49f-e34f-4dad-a1a5-63e2256e4f6e",
       "name": "Fetch Bookstore",
       "type": "n8n-nodes-base.httpRequest",
@@ -43,9 +39,21 @@
       "position": [
         0,
         64
-      ]
+      ],
+      "parameters": {
+        "url": "https://books.toscrape.com",
+        "options": {}
+      }
     },
     {
+      "id": "a6353b79-08a7-4a8e-be3a-b50216305b06",
+      "name": "Extract Books",
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        64
+      ],
       "parameters": {
         "operation": "extractHtmlContent",
         "extractionValues": {
@@ -59,21 +67,9 @@
           ]
         },
         "options": {}
-      },
-      "id": "a6353b79-08a7-4a8e-be3a-b50216305b06",
-      "name": "Extract Books",
-      "type": "n8n-nodes-base.html",
-      "typeVersion": 1.2,
-      "position": [
-        224,
-        64
-      ]
+      }
     },
     {
-      "parameters": {
-        "fieldToSplitOut": "books",
-        "options": {}
-      },
       "id": "e446ac53-fdbe-4cc9-9488-760e11f1dc9f",
       "name": "Split Out Books",
       "type": "n8n-nodes-base.splitOut",
@@ -81,9 +77,21 @@
       "position": [
         448,
         64
-      ]
+      ],
+      "parameters": {
+        "fieldToSplitOut": "books",
+        "options": {}
+      }
     },
     {
+      "id": "adc9bfb6-6315-4d36-973e-6583a180f895",
+      "name": "Extract Book Fields",
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        672,
+        64
+      ],
       "parameters": {
         "operation": "extractHtmlContent",
         "dataPropertyName": "books",
@@ -112,20 +120,9 @@
           ]
         },
         "options": {}
-      },
-      "id": "adc9bfb6-6315-4d36-973e-6583a180f895",
-      "name": "Extract Book Fields",
-      "type": "n8n-nodes-base.html",
-      "typeVersion": 1.2,
-      "position": [
-        672,
-        64
-      ]
+      }
     },
     {
-      "parameters": {
-        "jsCode": "return $input.all().map(item => {\n  const data = item.json;\n\n  // Parse price: remove \"\u00a3\" and convert to number\n  const price = parseFloat((data.price || '').replace(/[^0-9.]/g, ''));\n\n  // Parse availability: extract clean text\n  const available = (data.availability || '').trim().toLowerCase().includes('in stock');\n\n  // Parse rating: extract star count from class name\n  const ratingMap = { 'One': 1, 'Two': 2, 'Three': 3, 'Four': 4, 'Five': 5 };\n  const ratingClass = (data.rating || '').replace('star-rating ', '');\n  const stars = ratingMap[ratingClass] || 0;\n\n  return {\n    json: {\n      title: data.title || 'Unknown',\n      price: price,\n      in_stock: available,\n      stars: stars,\n      value_score: stars > 0 ? Math.round((stars / price) * 100) / 100 : 0\n    }\n  };\n});"
-      },
       "id": "6920f68f-ad79-4431-9eba-5162a5e6f9c9",
       "name": "Clean Book Data",
       "type": "n8n-nodes-base.code",
@@ -133,9 +130,20 @@
       "position": [
         880,
         64
-      ]
+      ],
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n  const data = item.json;\n\n  // Parse price: remove \"\u00a3\" and convert to number\n  const price = parseFloat((data.price || '').replace(/[^0-9.]/g, ''));\n\n  // Parse availability: extract clean text\n  const available = (data.availability || '').trim().toLowerCase().includes('in stock');\n\n  // Parse rating: extract star count from class name\n  const ratingMap = { 'One': 1, 'Two': 2, 'Three': 3, 'Four': 4, 'Five': 5 };\n  const ratingClass = (data.rating || '').replace('star-rating ', '');\n  const stars = ratingMap[ratingClass] || 0;\n\n  return {\n    json: {\n      title: data.title || 'Unknown',\n      price: price,\n      in_stock: available,\n      stars: stars,\n      value_score: stars > 0 ? Math.round((stars / price) * 100) / 100 : 0\n    }\n  };\n});"
+      }
     },
     {
+      "id": "e691a267-9fe8-4b82-975a-92fc997b7f0e",
+      "name": "Sort by Price",
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        1104,
+        64
+      ],
       "parameters": {
         "sortFieldsUi": {
           "sortField": [
@@ -145,17 +153,17 @@
           ]
         },
         "options": {}
-      },
-      "id": "e691a267-9fe8-4b82-975a-92fc997b7f0e",
-      "name": "Sort by Price",
-      "type": "n8n-nodes-base.sort",
-      "typeVersion": 1,
-      "position": [
-        1104,
-        64
-      ]
+      }
     },
     {
+      "id": "bd6dd180-a6c0-4d6b-94b7-fa77e1724160",
+      "name": "In Stock Only",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1328,
+        64
+      ],
       "parameters": {
         "conditions": {
           "options": {
@@ -179,32 +187,9 @@
           "combinator": "and"
         },
         "options": {}
-      },
-      "id": "bd6dd180-a6c0-4d6b-94b7-fa77e1724160",
-      "name": "In Stock Only",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        1328,
-        64
-      ]
+      }
     },
     {
-      "parameters": {
-        "dataTableId": {
-          "__rl": true,
-          "value": "eM7tdvRtJAdaddvA",
-          "mode": "list",
-          "cachedResultName": "JH Books"
-        },
-        "columns": {
-          "mappingMode": "autoMapInputData",
-          "value": {},
-          "matchingColumns": [],
-          "schema": []
-        },
-        "options": {}
-      },
       "id": "58e0b617-3602-40b5-ad22-dfa37efbbf46",
       "name": "Save Books",
       "type": "n8n-nodes-base.dataTable",
@@ -212,28 +197,13 @@
       "position": [
         1552,
         -64
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "const items = $input.all();\nconst prices = items.map(i => i.json.price);\nconst total = prices.reduce((sum, p) => sum + p, 0);\nconst avg = total / prices.length;\n\nreturn [{\n  json: {\n    total_books: items.length,\n    total_value: Math.round(total * 100) / 100,\n    average_price: Math.round(avg * 100) / 100,\n    cheapest: items[0]?.json.title || 'N/A',\n    cheapest_price: prices[0] || 0,\n    most_expensive: items[items.length - 1]?.json.title || 'N/A',\n    most_expensive_price: prices[prices.length - 1] || 0,\n    five_star_count: items.filter(i => i.json.stars === 5).length,\n    generated_at: new Date().toISOString()\n  }\n}];"
-      },
-      "id": "f8c0612e-853d-447c-95df-e8a376d495d0",
-      "name": "Summary Statistics",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1552,
-        160
-      ]
-    },
-    {
+      ],
       "parameters": {
         "dataTableId": {
           "__rl": true,
-          "value": "rFZv7TUwAIUHlKtc",
+          "value": "eM7tdvRtJAdaddvA",
           "mode": "list",
-          "cachedResultName": "JH Book Summary"
+          "cachedResultName": "TH Books"
         },
         "columns": {
           "mappingMode": "autoMapInputData",
@@ -242,7 +212,22 @@
           "schema": []
         },
         "options": {}
-      },
+      }
+    },
+    {
+      "id": "f8c0612e-853d-447c-95df-e8a376d495d0",
+      "name": "Summary Statistics",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1552,
+        160
+      ],
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst prices = items.map(i => i.json.price);\nconst total = prices.reduce((sum, p) => sum + p, 0);\nconst avg = total / prices.length;\n\nreturn [{\n  json: {\n    total_books: items.length,\n    total_value: Math.round(total * 100) / 100,\n    average_price: Math.round(avg * 100) / 100,\n    cheapest: items[0]?.json.title || 'N/A',\n    cheapest_price: prices[0] || 0,\n    most_expensive: items[items.length - 1]?.json.title || 'N/A',\n    most_expensive_price: prices[prices.length - 1] || 0,\n    five_star_count: items.filter(i => i.json.stars === 5).length,\n    generated_at: new Date().toISOString()\n  }\n}];"
+      }
+    },
+    {
       "id": "f62c48d9-b6f9-4a34-a4c0-a85dd9f281c0",
       "name": "Save Summary",
       "type": "n8n-nodes-base.dataTable",
@@ -250,7 +235,22 @@
       "position": [
         1760,
         160
-      ]
+      ],
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "rFZv7TUwAIUHlKtc",
+          "mode": "list",
+          "cachedResultName": "TH Book Summary"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      }
     }
   ],
   "connections": {
