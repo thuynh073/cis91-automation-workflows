@@ -1,0 +1,428 @@
+{
+  "name": "AI-Powered Auto-Responder",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "midterm-auto-responder",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "00942cc2-1ca0-4b74-9fb6-0148066984d3",
+      "name": "Incoming Message Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -560,
+        0
+      ],
+      "webhookId": "38d1abab-68c2-4115-bfce-268bde061078"
+    },
+    {
+      "parameters": {
+        "jsCode": "// The Webhook node hands us the POSTed JSON under $json.body.\n// Fall back to $json itself so \"paste JSON into a Set node\" tests still work.\ntry {\n  const body = ($json && $json.body) ? $json.body : ($json || {});\n  const asText = (v) => (v === undefined || v === null ? '' : String(v).trim());\n\n  const sender =\n    asText(body.sender) || asText(body.from) || asText(body.email) || 'unknown@sender';\n  const subject = asText(body.subject) || asText(body.topic) || '(no subject)';\n  // \"message\" is the documented field; accept a few aliases so the workflow\n  // is forgiving about the shape of the incoming payload.\n  const message =\n    asText(body.message) || asText(body.body) || asText(body.text) || asText(body.content);\n\n  return [{\n    json: {\n      message_id: 'MSG-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),\n      received_at: new Date().toISOString(),\n      sender: sender,\n      subject: subject,\n      original_message: message,\n      message_length: message.length,\n      message_summary: message.slice(0, 160),\n      valid: message.length > 0,\n      validation_error: message.length > 0 ? '' : 'No message text found in the request body.',\n      kb_matches: [],\n      kb_match_ids: '',\n      kb_match_type: 'none',\n      kb_top_score: 0,\n      kb_context: ''\n    }\n  }];\n} catch (error) {\n  // Never let a malformed payload throw: hand it to the reject branch instead.\n  return [{\n    json: {\n      message_id: 'MSG-INVALID-' + Date.now(),\n      received_at: new Date().toISOString(),\n      sender: 'unknown@sender',\n      subject: '(unreadable payload)',\n      original_message: '',\n      message_length: 0,\n      message_summary: '',\n      valid: false,\n      validation_error: 'Could not read the request body: ' + error.message\n    }\n  }];\n}"
+      },
+      "id": "a3ac657b-9024-4188-9d2a-8b906ce83ddf",
+      "name": "Normalize Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -340,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8db24d78-8f44-4162-87f2-94e1ef97d6cc",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8b15b9bd-e5a4-4848-932a-dfe6f645ce8c",
+      "name": "Valid Message?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -120,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { status: 'error', message_id: $json.message_id, error: $json.validation_error } }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "009c5b11-7e28-4b1e-9a8b-341d07c26e1f",
+      "name": "Respond Invalid Input",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        160,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are the triage classifier for the CIS 91 Help Desk, which answers\nquestions from students and staff about campus IT, accounts, and billing.\n\nClassify the message below into exactly ONE of these categories:\n\n- faq: a general \"how do I...\" question that the help desk documents cover\n  (printing, software availability, hours, common how-tos).\n- technical_support: something is broken or unreachable for this user -\n  VPN, campus Wi-Fi, logins, MFA, locked accounts, portal errors.\n- billing: money matters - tuition, payment plans, refunds, charges, holds,\n  late fees, receipts.\n- general_inquiry: anything that is not IT or money - transcripts,\n  enrollment questions, contacting an instructor, office hours, policies.\n\nSender: {{ $json.sender }}\nSubject: {{ $json.subject }}\nMessage:\n{{ $json.original_message }}\n\nRules:\n- Choose the category that matches the sender's primary goal, even if they\n  mention several topics.\n- confidence is a number from 0.0 to 1.0 and must reflect genuine ambiguity.\n  Use below 0.6 when the message could reasonably fit two categories.\n- keywords: 3 to 6 single lowercase words taken from the message, used to\n  search the help desk knowledge base.\n- reasoning: one or two sentences explaining the choice.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "id": "3f4f251a-f806-4005-8b56-82d06d2137c1",
+      "name": "Classify Message",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        160,
+        0
+      ],
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "model": "deepseek/deepseek-v4.1-flash-1017",
+        "options": {
+          "temperature": 0.0
+        }
+      },
+      "id": "bd64cc77-4283-44d1-8466-ed33a89e583d",
+      "name": "OpenRouter Chat Model (Classify)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        60,
+        240
+      ],
+      "credentials": {
+        "openRouterApi": {
+          "id": "W9uBPl8BObqfpjkn",
+          "name": "TH OpenRouter"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\n  \"category\": \"technical_support\",\n  \"confidence\": 0.93,\n  \"keywords\": [\n    \"vpn\",\n    \"connect\",\n    \"laptop\",\n    \"off-campus\"\n  ],\n  \"reasoning\": \"The sender cannot connect to a documented campus service, which is a support issue rather than a billing or policy question.\"\n}"
+      },
+      "id": "fd0fdeb3-d510-45bc-9778-484789762fd8",
+      "name": "Classification Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ---------------------------------------------------------------------------\n// Knowledge base: 12 Q/A entries covering all four categories.\n// Edit this array to change the knowledge base; nothing else needs to change.\n// ---------------------------------------------------------------------------\nconst KB = [\n  {\n    \"id\": \"KB-01\",\n    \"category\": \"technical_support\",\n    \"question\": \"How do I connect to the campus VPN from my laptop?\",\n    \"answer\": \"Install the GlobalProtect client from software.codis.edu/vpn, sign in with your campus username and password, and approve the Duo prompt. The gateway is vpn.codis.edu. Once connected the client shows \\\"Connected\\\" and you can reach library databases and lab servers from off campus.\",\n    \"keywords\": [\n      \"vpn\",\n      \"globalprotect\",\n      \"connect\",\n      \"remote\",\n      \"gateway\",\n      \"off-campus\",\n      \"tunnel\"\n    ]\n  },\n  {\n    \"id\": \"KB-02\",\n    \"category\": \"technical_support\",\n    \"question\": \"Why can't I get on the campus Wi-Fi?\",\n    \"answer\": \"Join the SSID CODID-Students with your campus username (not your email alias) and password. Forget the network first if it keeps failing, then rejoin. Guest access is SSID CODID-Guest, which is open for 24 hours and does not reach internal servers.\",\n    \"keywords\": [\n      \"wifi\",\n      \"wi-fi\",\n      \"wireless\",\n      \"ssid\",\n      \"network\",\n      \"internet\",\n      \"connect\"\n    ]\n  },\n  {\n    \"id\": \"KB-03\",\n    \"category\": \"faq\",\n    \"question\": \"How do I reset my campus password?\",\n    \"answer\": \"Go to accounts.codis.edu/reset, enter your campus username, confirm with Duo, and set a new password of at least 12 characters. Password changes propagate to Wi-Fi, VPN, and the portal within about 5 minutes.\",\n    \"keywords\": [\n      \"password\",\n      \"reset\",\n      \"forgot\",\n      \"forgotten\",\n      \"change\",\n      \"credentials\",\n      \"expired\"\n    ]\n  },\n  {\n    \"id\": \"KB-04\",\n    \"category\": \"technical_support\",\n    \"question\": \"How do I set up Duo multi-factor authentication on a new phone?\",\n    \"answer\": \"Open accounts.codis.edu/mfa, choose \\\"Add a device\\\", scan the QR code with the Duo Mobile app, and complete one test approval. Keep the old phone enrolled until the new one works. If you have lost both devices, bring photo ID to the Tech Desk in the library for a bypass code.\",\n    \"keywords\": [\n      \"duo\",\n      \"mfa\",\n      \"two-factor\",\n      \"2fa\",\n      \"phone\",\n      \"authenticator\",\n      \"enroll\",\n      \"device\"\n    ]\n  },\n  {\n    \"id\": \"KB-05\",\n    \"category\": \"technical_support\",\n    \"question\": \"The student portal or Canvas will not let me log in.\",\n    \"answer\": \"First confirm the password at accounts.codis.edu/unlock, which clears lockouts after five failed attempts. If the password is accepted there but the portal still fails, clear the browser cache or try an incognito window, then open a ticket with the exact error text.\",\n    \"keywords\": [\n      \"portal\",\n      \"canvas\",\n      \"login\",\n      \"log\",\n      \"signin\",\n      \"sign-in\",\n      \"cached\",\n      \"browser\",\n      \"locked\"\n    ]\n  },\n  {\n    \"id\": \"KB-06\",\n    \"category\": \"billing\",\n    \"question\": \"Does the college offer a tuition payment plan?\",\n    \"answer\": \"Yes. Fall and spring tuition can be split into four interest-free installments through the Nelnet plan in the student portal under Finances > Payment Plans. The first installment is due at enrollment in the plan, and there is a $35 per-term setup fee.\",\n    \"keywords\": [\n      \"payment\",\n      \"plan\",\n      \"installment\",\n      \"tuition\",\n      \"nelnet\",\n      \"pay\",\n      \"split\",\n      \"monthly\"\n    ]\n  },\n  {\n    \"id\": \"KB-07\",\n    \"category\": \"billing\",\n    \"question\": \"What is the refund policy if I drop a class?\",\n    \"answer\": \"A 100% refund applies through the end of the second week of the term, 50% through the fourth week, and no refund after that. Refunds go back to the original payment method within 10 business days. Dropping after the refund window still removes the charge only if the withdrawal is an approved medical or administrative withdrawal.\",\n    \"keywords\": [\n      \"refund\",\n      \"drop\",\n      \"withdraw\",\n      \"withdrawal\",\n      \"money\",\n      \"back\",\n      \"reimburse\",\n      \"policy\"\n    ]\n  },\n  {\n    \"id\": \"KB-08\",\n    \"category\": \"faq\",\n    \"question\": \"What software can students install for free?\",\n    \"answer\": \"Students get Microsoft 365, the JetBrains suite, GitHub Student Developer Pack, and VMware through software.codis.edu. Log in with your campus account and download from the Student Software page. Adobe Creative Cloud is available only in the open labs, not for personal machines.\",\n    \"keywords\": [\n      \"software\",\n      \"install\",\n      \"free\",\n      \"license\",\n      \"microsoft\",\n      \"office\",\n      \"jetbrains\",\n      \"adobe\",\n      \"download\"\n    ]\n  },\n  {\n    \"id\": \"KB-09\",\n    \"category\": \"faq\",\n    \"question\": \"How do I print on campus?\",\n    \"answer\": \"Print from any lab machine or upload to print.codis.edu from your own laptop, then release the job at any printer with your student ID card. Each student gets $12.00 of printing credit per term; black and white pages cost $0.05 and color pages cost $0.25.\",\n    \"keywords\": [\n      \"print\",\n      \"printing\",\n      \"printer\",\n      \"pages\",\n      \"credit\",\n      \"scan\",\n      \"copy\",\n      \"release\"\n    ]\n  },\n  {\n    \"id\": \"KB-10\",\n    \"category\": \"technical_support\",\n    \"question\": \"My account is locked out after too many failed logins.\",\n    \"answer\": \"Accounts lock for 30 minutes after five failed attempts. Self-service unlock is at accounts.codis.edu/unlock and takes effect immediately. If you are locked out during an exam or a timed deadline, call the Tech Desk at x4357 with your student ID and they can unlock the account manually.\",\n    \"keywords\": [\n      \"locked\",\n      \"lockout\",\n      \"failed\",\n      \"attempts\",\n      \"unlock\",\n      \"blocked\",\n      \"suspended\",\n      \"account\"\n    ]\n  },\n  {\n    \"id\": \"KB-11\",\n    \"category\": \"general_inquiry\",\n    \"question\": \"How do I request an official transcript?\",\n    \"answer\": \"Order official transcripts through the National Student Clearinghouse link in the portal under Records > Transcripts. Electronic transcripts are $8 and usually arrive within one business day; paper transcripts are $12 and take 5 to 7 business days. Unofficial transcripts are free and instant from the same page.\",\n    \"keywords\": [\n      \"transcript\",\n      \"official\",\n      \"records\",\n      \"order\",\n      \"clearinghouse\",\n      \"diploma\",\n      \"grades\"\n    ]\n  },\n  {\n    \"id\": \"KB-12\",\n    \"category\": \"general_inquiry\",\n    \"question\": \"How do I contact my instructor or find office hours?\",\n    \"answer\": \"Office hours are on the syllabus and on the course page in Canvas. Email is the fastest route; use your campus address so it is not filtered. Instructors are expected to reply within two business days, and the department office can reach them if you have an urgent deadline issue.\",\n    \"keywords\": [\n      \"instructor\",\n      \"professor\",\n      \"teacher\",\n      \"office\",\n      \"hours\",\n      \"email\",\n      \"contact\",\n      \"reach\",\n      \"syllabus\"\n    ]\n  }\n];\n\nconst STOPWORDS = new Set([\n  'the','and','for','are','but','not','you','your','with','have','this','that','how',\n  'can','get','from','was','were','when','what','why','does','did','will','would',\n  'could','should','about','into','out','any','all','its','i','my','me','we','us',\n  'our','to','of','in','on','at','is','be','do','as','if','or','so','up','an','a',\n  'it','just','still','really','please','help','need','want','there','here','been',\n  'also','got','one','two','like','know','sure','going','much','many','very','some',\n  'them','they','then','than','now','new','im','id','dont','cant','thanks','hi'\n]);\n\n// Very light stemmer so \"printing\", \"printed\" and \"print\" all match and\n// \"dropped\" matches \"drop\". Consistency matters more than linguistic accuracy.\nconst stem = (word) => {\n  if (word.length <= 4) return word;\n  let w = word;\n  if (/ing$/.test(w)) w = w.slice(0, -3);\n  else if (/ed$/.test(w)) w = w.slice(0, -2);\n  else if (/(ss|us|is)$/.test(w)) return w;\n  else if (/es$/.test(w)) w = w.slice(0, -2);\n  else if (/s$/.test(w)) w = w.slice(0, -1);\n  // \"dropp\" -> \"drop\", \"runn\" -> \"run\"\n  return /([bdgklmnprt])\\1$/.test(w) ? w.slice(0, -1) : w;\n};\n\nconst words = (text) =>\n  [...new Set((String(text || '').toLowerCase().match(/[a-z0-9]+/g) || [])\n    .filter((w) => w.length > 2 && !STOPWORDS.has(w))\n    .map(stem))];\n\n// Index the knowledge base once: which entries each term appears in. Terms that\n// appear in only a few entries (\"vpn\", \"password\") carry more weight than\n// generic ones (\"campus\"), the same idea as TF-IDF.\nconst vocab = new Map();\nfor (const entry of KB) {\n  const terms = new Set([\n    ...words(entry.question),\n    ...entry.keywords.map((k) => stem(String(k).toLowerCase()))\n  ]);\n  for (const term of terms) {\n    if (!vocab.has(term)) vocab.set(term, new Set());\n    vocab.get(term).add(entry.id);\n  }\n}\nconst idf = (term) => {\n  const df = vocab.has(term) ? vocab.get(term).size : 0;\n  return df === 0 ? 0 : Math.log(KB.length / (1 + df));\n};\n\n// The classifier node only passes its own { output } object downstream, so\n// recover the normalized message from the Normalize Message node.\nconst msg = $('Normalize Message').first().json;\n\n// Search the subject plus the body, so \"VPN\" in the subject still counts.\n// Read the classifier defensively: if the LLM failed, still search the KB.\nlet classification = {};\ntry {\n  classification = $('Classify Message').first().json.output || {};\n} catch (error) {\n  classification = {};\n}\nconst category = classification.category || 'general_inquiry';\nconst confidence = Number(classification.confidence) || 0;\nconst reasoning = classification.reasoning || '';\nconst classifierKeywords = Array.isArray(classification.keywords)\n  ? classification.keywords.join(' ')\n  : '';\n\nconst tokens = words(\n  (msg.original_message || '') + ' ' +\n  (msg.subject || '') + ' ' +\n  classifierKeywords\n);\nconst messageSet = new Set(tokens);\n\nconst scored = KB.map((entry) => {\n  const entryTerms = new Set([\n    ...words(entry.question),\n    ...entry.keywords.map((k) => stem(String(k).toLowerCase()))\n  ]);\n  const matched = [...messageSet].filter((t) => entryTerms.has(t));\n  // Saturating sum: one distinctive term already means a lot, extra terms add\n  // less, so a long message cannot inflate its score by sheer length.\n  const weightSum = matched.reduce((sum, t) => sum + idf(t), 0);\n  let score = 1 - Math.exp(-weightSum / 1.8);\n  if (entry.category === category) score = Math.min(score + 0.05, 1);\n  return {\n    id: entry.id,\n    category: entry.category,\n    question: entry.question,\n    answer: entry.answer,\n    matched_terms: matched,\n    score: Math.round(Math.min(score, 1) * 100) / 100\n  };\n});\n\nconst THRESHOLD = 0.28;\nconst ranked = scored.sort((a, b) => b.score - a.score);\nconst matches = ranked.filter((entry) => entry.score >= THRESHOLD).slice(0, 3);\nconst topScore = matches.length ? matches[0].score : 0;\n\n// strong = the message hits the distinctive vocabulary of an entry,\n// partial = related to the topic but not an exact match,\n// none = outside the knowledge base entirely.\nconst matchType = matches.length === 0 ? 'none' : topScore >= 0.65 ? 'strong' : 'partial';\n\nconst kbContext = matches.length === 0\n  ? 'No knowledge base entry matched this message.'\n  : matches.map((m) => '[' + m.id + '] (' + m.category + ', score ' + m.score + ')\\nQ: ' + m.question + '\\nA: ' + m.answer).join('\\n\\n');\n\nreturn [{\n  json: {\n    ...msg,\n    kb_matches: matches,\n    kb_match_ids: matches.map((m) => m.id).join(', '),\n    kb_match_count: matches.length,\n    kb_top_score: topScore,\n    kb_match_type: matchType,\n    kb_context: kbContext,\n    // Carry the classification forward so later nodes never have to reach\n    // back into the LLM node's output (which may be empty on failure).\n    classified_category: category,\n    classified_confidence: confidence,\n    classification_reasoning: reasoning\n  }\n}];"
+      },
+      "id": "12f025d7-38c0-41e0-b24f-122dc755adb9",
+      "name": "Search Knowledge Base",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a support agent for the CIS 91 Help Desk replying to a student\nor staff member. Write the actual reply that will be sent to them.\n\nIncoming message\nSender: {{ $json.sender }}\nSubject: {{ $json.subject }}\nCategory chosen by triage: {{ $json.classified_category }} (confidence {{ $json.classified_confidence }})\nMessage:\n{{ $json.original_message }}\n\nKnowledge base matches ({{ $json.kb_match_type }} match)\n{{ $json.kb_context }}\n\nHow to write the reply:\n- Answer the sender's actual question first, in the first sentence.\n- When knowledge base entries are provided, use their concrete details only -\n  never invent policies, prices, phone numbers, or deadlines that are not in\n  the knowledge base.\n- If the match is \"none\" or the question is not covered, say plainly that you\n  do not have that information and that you are routing the message to a\n  specialist, then set escalation_needed to true.\n- Set escalation_needed to true for billing disputes, account lockouts,\n  lost devices, refunds outside policy, or anything with a deadline in the\n  next 48 hours.\n- Keep the body under 140 words, professional and warm, plain text only (no\n  markdown headings or bullet characters).\n- End with one clear next step.\n\nReturn subject (a short reply subject line), body, used_kb_ids (the KB ids you\nactually used, or an empty array), escalation_needed (true or false), and tone\n(one word, e.g. reassuring, apologetic, neutral).",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "id": "fcce786b-aed4-46d0-bf92-216822a16038",
+      "name": "Generate Response",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        660,
+        0
+      ],
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "model": "deepseek/deepseek-v4.1-flash-1017",
+        "options": {
+          "temperature": 0.4
+        }
+      },
+      "id": "9023534e-62a8-4c64-8c1f-9fe4cc2e0635",
+      "name": "OpenRouter Chat Model (Respond)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        560,
+        240
+      ],
+      "credentials": {
+        "openRouterApi": {
+          "id": "W9uBPl8BObqfpjkn",
+          "name": "TH OpenRouter"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\n  \"subject\": \"Re: Connecting to the campus VPN\",\n  \"body\": \"Hi, thanks for reaching out. To connect from off campus, install GlobalProtect from software.codis.edu/vpn and sign in with your campus username and password, then approve the Duo prompt. The gateway is vpn.codis.edu. Once the client shows Connected you can reach the library databases. If it still fails, reply with the error message and we will dig in.\",\n  \"used_kb_ids\": [\n    \"KB-01\"\n  ],\n  \"escalation_needed\": false,\n  \"tone\": \"reassuring\"\n}"
+      },
+      "id": "86c12110-5607-41c1-8e42-c9e9f8bfc643",
+      "name": "Response Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        740,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const kb = $('Search Knowledge Base').item.json;\nconst reply = $json.output || {};\n\n// Defensive defaults: if the response chain returned nothing usable, deliver a\n// safe fallback instead of an empty reply, and flag it as escalated.\nconst fallbackBody =\n  'Thanks for your message. I was not able to draft a confident answer, so I have ' +\n  'routed it to a help desk specialist who will follow up within one business day.';\n\nconst body = (reply.body && String(reply.body).trim()) || fallbackBody;\nconst escalated = reply.escalation_needed === true || !reply.body;\nconst matchedIds = kb.kb_match_ids || '';\nconst usedIds = Array.isArray(reply.used_kb_ids) && reply.used_kb_ids.length\n  ? reply.used_kb_ids.join(', ')\n  : '';\n\nconst elapsed = Date.now() - Date.parse(kb.received_at);\n\nreturn [{\n  json: {\n    // --- log row (column names match the TH Interaction Log Data Table) ---\n    message_id: kb.message_id,\n    timestamp: kb.received_at,\n    sender: kb.sender,\n    subject: kb.subject,\n    message_summary: kb.message_summary,\n    original_message: kb.original_message,\n    category: kb.classified_category || 'unknown',\n    confidence: Number(kb.classified_confidence) || 0,\n    reasoning: kb.classification_reasoning || '',\n    kb_match_ids: matchedIds,\n    kb_used_ids: usedIds,\n    kb_match_type: kb.kb_match_type,\n    kb_match_score: kb.kb_top_score || 0,\n    ai_response: body,\n    reply_subject: reply.subject || ('Re: ' + kb.subject),\n    tone: reply.tone || 'neutral',\n    escalation_needed: escalated,\n    priority: escalated ? 'high' : 'normal',\n    delivery_status: 'delivered',\n    delivery_channel: 'webhook',\n    response_time_ms: elapsed,\n    // --- what the webhook returns to the caller (removed before logging) ---\n    reply: {\n      to: kb.sender,\n      subject: reply.subject || ('Re: ' + kb.subject),\n      body: body,\n      tone: reply.tone || 'neutral',\n      escalation_needed: escalated\n    }\n  }\n}];"
+      },
+      "id": "e96833b0-978e-480c-8b35-399913b42934",
+      "name": "Assemble Reply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { status: 'ok', message_id: $json.message_id, category: $json.category, confidence: $json.confidence, kb_matches: $json.kb_match_ids, kb_used: $json.kb_used_ids, escalation_needed: $json.escalation_needed, reply: $json.reply } }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "ee572a0b-f958-4599-931a-b782e25506a1",
+      "name": "Respond With Reply",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1160,
+        -140
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Keep only real Data Table columns. The Respond to Webhook node still gets\n// the full item from Assemble Reply on the parallel branch.\nconst row = $json;\nreturn [{\n  json: {\n    message_id: row.message_id,\n    timestamp: row.timestamp,\n    sender: row.sender,\n    subject: row.subject,\n    message_summary: row.message_summary,\n    original_message: row.original_message,\n    category: row.category,\n    confidence: row.confidence,\n    reasoning: row.reasoning,\n    kb_match_ids: row.kb_match_ids,\n    kb_used_ids: row.kb_used_ids,\n    kb_match_type: row.kb_match_type,\n    kb_match_score: row.kb_match_score,\n    ai_response: row.ai_response,\n    reply_subject: row.reply_subject,\n    tone: row.tone,\n    escalation_needed: row.escalation_needed,\n    priority: row.priority,\n    delivery_status: row.delivery_status,\n    delivery_channel: row.delivery_channel,\n    response_time_ms: row.response_time_ms\n  }\n}];"
+      },
+      "id": "1277cde2-c10b-4ec5-a479-f8ae75257db9",
+      "name": "Prepare Log Row",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "YRpXfjz54bzN8k0P",
+          "mode": "list",
+          "cachedResultName": "TH Interaction Log"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "32d60325-7480-48b8-bfd2-8a90e6354d88",
+      "name": "Log Interaction",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        1340,
+        140
+      ]
+    }
+  ],
+  "connections": {
+    "Incoming Message Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Message": {
+      "main": [
+        [
+          {
+            "node": "Valid Message?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Message?": {
+      "main": [
+        [
+          {
+            "node": "Classify Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Invalid Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model (Classify)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Classify Message",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classification Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Classify Message",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify Message": {
+      "main": [
+        [
+          {
+            "node": "Search Knowledge Base",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Knowledge Base": {
+      "main": [
+        [
+          {
+            "node": "Generate Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model (Respond)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Response",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Response Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Generate Response",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Response": {
+      "main": [
+        [
+          {
+            "node": "Assemble Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assemble Reply": {
+      "main": [
+        [
+          {
+            "node": "Respond With Reply",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Prepare Log Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Log Row": {
+      "main": [
+        [
+          {
+            "node": "Log Interaction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

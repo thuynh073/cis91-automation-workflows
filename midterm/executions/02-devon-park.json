@@ -1,0 +1,137 @@
+{
+  "execution_id": "2687",
+  "started_at": "2026-11-10T20:06:23.190Z",
+  "stopped_at": "2026-11-10T20:06:29.765Z",
+  "input": {
+    "message_id": "MSG-1794341183214-o710t",
+    "received_at": "2026-11-10T20:06:23.214Z",
+    "sender": "devon.park@student.codis.edu",
+    "subject": "wireless in the library",
+    "original_message": "I can't get the internet working on my phone in the library and my class starts in ten minutes. Is there a different network I should be joining?",
+    "message_length": 145,
+    "message_summary": "I can't get the internet working on my phone in the library and my class starts in ten minutes. Is there a different network I should be joining?",
+    "valid": true,
+    "validation_error": "",
+    "kb_matches": [],
+    "kb_match_ids": "",
+    "kb_match_type": "none",
+    "kb_top_score": 0,
+    "kb_context": ""
+  },
+  "classification": {
+    "category": "technical_support",
+    "confidence": 0.92,
+    "keywords": [
+      "internet",
+      "phone",
+      "library",
+      "network",
+      "joining"
+    ],
+    "reasoning": "The sender cannot get internet working on their phone in the library, which is a connectivity issue needing technical support. The question about joining a different network is part of troubleshooting the same problem."
+  },
+  "kb": {
+    "matches": [
+      {
+        "id": "KB-02",
+        "category": "technical_support",
+        "question": "Why can't I get on the campus Wi-Fi?",
+        "answer": "Join the SSID CODID-Students with your campus username (not your email alias) and password. Forget the network first if it keeps failing, then rejoin. Guest access is SSID CODID-Guest, which is open for 24 hours and does not reach internal servers.",
+        "matched_terms": [
+          "internet",
+          "network",
+          "wireless"
+        ],
+        "score": 1
+      },
+      {
+        "id": "KB-04",
+        "category": "technical_support",
+        "question": "How do I set up Duo multi-factor authentication on a new phone?",
+        "answer": "Open accounts.codis.edu/mfa, choose \"Add a device\", scan the QR code with the Duo Mobile app, and complete one test approval. Keep the old phone enrolled until the new one works. If you have lost both devices, bring photo ID to the Tech Desk in the library for a bypass code.",
+        "matched_terms": [
+          "phone"
+        ],
+        "score": 0.68
+      },
+      {
+        "id": "KB-07",
+        "category": "billing",
+        "question": "What is the refund policy if I drop a class?",
+        "answer": "A 100% refund applies through the end of the second week of the term, 50% through the fourth week, and no refund after that. Refunds go back to the original payment method within 10 business days. Dropping after the refund window still removes the charge only if the withdrawal is an approved medical or administrative withdrawal.",
+        "matched_terms": [
+          "class"
+        ],
+        "score": 0.63
+      }
+    ],
+    "matched_ids": "KB-02, KB-04, KB-07",
+    "type": "strong",
+    "score": 1
+  },
+  "response": {
+    "subject": "Re: wireless in the library",
+    "body": "Join the CODID-Students network using your campus username (not your email alias) and password; if it keeps failing, forget the network first and then rejoin. If you need quick internet before class, CODID-Guest is open for 24 hours, but it does not reach internal servers. Because your class starts in ten minutes, I'm flagging this for a specialist in case you need further help. Please try rejoining CODID-Students now and reply if it still fails.",
+    "used_kb_ids": [
+      "KB-02"
+    ],
+    "escalation_needed": true,
+    "tone": "reassuring"
+  },
+  "assembled": {
+    "message_id": "MSG-1794341183214-o710t",
+    "timestamp": "2026-11-10T20:06:23.214Z",
+    "sender": "devon.park@student.codis.edu",
+    "subject": "wireless in the library",
+    "message_summary": "I can't get the internet working on my phone in the library and my class starts in ten minutes. Is there a different network I should be joining?",
+    "original_message": "I can't get the internet working on my phone in the library and my class starts in ten minutes. Is there a different network I should be joining?",
+    "category": "technical_support",
+    "confidence": 0.92,
+    "reasoning": "The sender cannot get internet working on their phone in the library, which is a connectivity issue needing technical support. The question about joining a different network is part of troubleshooting the same problem.",
+    "kb_match_ids": "KB-02, KB-04, KB-07",
+    "kb_used_ids": "KB-02",
+    "kb_match_type": "strong",
+    "kb_match_score": 1,
+    "ai_response": "Join the CODID-Students network using your campus username (not your email alias) and password; if it keeps failing, forget the network first and then rejoin. If you need quick internet before class, CODID-Guest is open for 24 hours, but it does not reach internal servers. Because your class starts in ten minutes, I'm flagging this for a specialist in case you need further help. Please try rejoining CODID-Students now and reply if it still fails.",
+    "reply_subject": "Re: wireless in the library",
+    "tone": "reassuring",
+    "escalation_needed": true,
+    "priority": "high",
+    "delivery_status": "delivered",
+    "delivery_channel": "webhook",
+    "response_time_ms": 6521,
+    "reply": {
+      "to": "devon.park@student.codis.edu",
+      "subject": "Re: wireless in the library",
+      "body": "Join the CODID-Students network using your campus username (not your email alias) and password; if it keeps failing, forget the network first and then rejoin. If you need quick internet before class, CODID-Guest is open for 24 hours, but it does not reach internal servers. Because your class starts in ten minutes, I'm flagging this for a specialist in case you need further help. Please try rejoining CODID-Students now and reply if it still fails.",
+      "tone": "reassuring",
+      "escalation_needed": true
+    }
+  },
+  "log_row": {
+    "id": 10,
+    "createdAt": "2026-11-10T20:06:29.759Z",
+    "updatedAt": "2026-11-10T20:06:29.759Z",
+    "message_id": "MSG-1794341183214-o710t",
+    "timestamp": "2026-11-10T20:06:23.214Z",
+    "sender": "devon.park@student.codis.edu",
+    "subject": "wireless in the library",
+    "message_summary": "I can't get the internet working on my phone in the library and my class starts in ten minutes. Is there a different network I should be joining?",
+    "original_message": "I can't get the internet working on my phone in the library and my class starts in ten minutes. Is there a different network I should be joining?",
+    "category": "technical_support",
+    "confidence": 0.92,
+    "reasoning": "The sender cannot get internet working on their phone in the library, which is a connectivity issue needing technical support. The question about joining a different network is part of troubleshooting the same problem.",
+    "kb_match_ids": "KB-02, KB-04, KB-07",
+    "kb_match_type": "strong",
+    "kb_match_score": 1,
+    "ai_response": "Join the CODID-Students network using your campus username (not your email alias) and password; if it keeps failing, forget the network first and then rejoin. If you need quick internet before class, CODID-Guest is open for 24 hours, but it does not reach internal servers. Because your class starts in ten minutes, I'm flagging this for a specialist in case you need further help. Please try rejoining CODID-Students now and reply if it still fails.",
+    "reply_subject": "Re: wireless in the library",
+    "escalation_needed": true,
+    "priority": "high",
+    "delivery_status": "delivered",
+    "delivery_channel": "webhook",
+    "response_time_ms": 6521,
+    "kb_used_ids": "KB-02",
+    "tone": "reassuring"
+  }
+}

@@ -1,0 +1,126 @@
+<!doctype html><html><head><meta charset="utf-8">
+<title>Test 5</title><style>
+:root { --ink:#17202a; --muted:#5b6b7c; --line:#d8e0e8; --brand:#c2410c;
+        --brand2:#0f766e; --bg:#eef2f6; --card:#ffffff; --ok:#15803d; }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--ink);
+       font-family:"Segoe UI", Arial, Helvetica, sans-serif; font-size:13px; }
+.page { width:1200px; margin:0 auto; padding:28px 34px 40px; background:var(--card); }
+h1 { font-size:30px; margin:0 0 4px; letter-spacing:-.4px; }
+h2 { font-size:19px; margin:24px 0 8px; padding-bottom:5px;
+     border-bottom:2px solid var(--brand); }
+h3 { font-size:14px; margin:14px 0 6px; }
+p { line-height:1.45; margin:6px 0; }
+a { color:var(--brand2); }
+.small { font-size:11px; color:var(--muted); }
+.mono { font-family:Consolas, "DejaVu Sans Mono", monospace; }
+.links { background:#fff7ed; border:1px solid #fdba74; border-left:5px solid var(--brand);
+         padding:12px 16px; margin:14px 0 18px; }
+.links div { margin:4px 0; font-size:12.5px; }
+.badge { display:inline-block; padding:2px 9px; border-radius:999px; font-size:11px;
+         font-weight:700; letter-spacing:.3px; }
+.pass { background:#dcfce7; color:var(--ok); border:1px solid #86efac; }
+.warn { background:#fef3c7; color:#92400e; border:1px solid #fcd34d; }
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.card { border:1px solid var(--line); border-radius:10px; padding:13px 15px;
+        background:#fff; }
+.card h3 { margin:0 0 8px; font-size:12px; text-transform:uppercase;
+           letter-spacing:.7px; color:var(--brand); }
+.kv { display:grid; grid-template-columns:120px 1fr; gap:3px 10px; font-size:12px; }
+.kv dt { color:var(--muted); }
+.kv dd { margin:0; }
+.message { background:#f8fafc; border:1px solid var(--line); border-radius:8px;
+           padding:10px 12px; font-size:12.5px; line-height:1.45; white-space:pre-wrap; }
+table { width:100%; border-collapse:collapse; font-size:11.5px; }
+th { text-align:left; background:#1f2937; color:#fff; padding:5px 7px; font-weight:600; }
+td { padding:5px 7px; border-bottom:1px solid var(--line); vertical-align:top; }
+tr:nth-child(even) td { background:#f8fafc; }
+.prompt { background:#0f172a; color:#e2e8f0; border-radius:8px; padding:9px 11px;
+          font-family:Consolas, "DejaVu Sans Mono", monospace; font-size:9.0px;
+          line-height:1.24; white-space:pre-wrap; }
+.stats { display:grid; grid-template-columns:repeat(5,1fr); gap:9px; margin:12px 0 2px; }
+.stat { border:1px solid var(--line); border-radius:8px; padding:7px 8px; text-align:center;
+        background:#f8fafc; }
+.stat b { display:block; font-size:18px; color:var(--brand); line-height:1.1; }
+.stat span { font-size:9.5px; color:var(--muted); }
+.kbgrid { display:grid; grid-template-columns:1fr 1fr; gap:4px 20px; font-size:9.6px; margin-top:8px; }
+.kbrow { border-bottom:1px solid #e5e7eb; padding:3px 0; line-height:1.3; }
+.kbrow b { color:var(--brand); }
+.kbrow span { color:var(--muted); font-size:8.2px; text-transform:uppercase;
+              letter-spacing:.4px; margin-left:4px; }
+.bar { height:9px; background:#e2e8f0; border-radius:99px; overflow:hidden; }
+.bar > span { display:block; height:100%; background:var(--brand2); }
+.flow { display:flex; flex-direction:column; align-items:center; gap:6px; margin:8px 0 4px; }
+.frow { display:flex; align-items:center; justify-content:center; gap:8px; }
+.node { border:2px solid #334155; border-radius:9px; padding:7px 12px; background:#fff;
+        min-width:150px; text-align:center; font-size:11px; font-weight:700; }
+.node small { display:block; font-weight:400; color:var(--muted); font-size:9.5px; }
+.node.trigger { border-color:var(--brand); background:#fff7ed; }
+.node.ai { border-color:var(--brand2); background:#ecfdf5; }
+.node.log { border-color:#7c3aed; background:#f5f3ff; }
+.node.err { border-color:#dc2626; background:#fef2f2; }
+.arrow { color:#64748b; font-size:22px; line-height:1; }
+.arrow.down { transform:rotate(90deg); }
+.branchlabel { font-size:10px; color:var(--muted); }
+.callout { background:#f1f5f9; border-left:4px solid #64748b; padding:9px 13px;
+           margin:10px 0; font-size:12px; }
+.section { page-break-before:always; }
+.testhead { display:flex; justify-content:space-between; align-items:flex-end;
+            border-bottom:3px solid var(--brand); padding-bottom:8px; margin-bottom:14px; }
+.testhead .t { font-size:23px; font-weight:800; }
+.testhead .s { color:var(--muted); font-size:12px; }
+ul { margin:5px 0 5px 18px; padding:0; }
+li { margin:2px 0; line-height:1.4; }
+</style></head><body><div class="page">
+<div class="testhead">
+  <div><div class="t">Test 5 — Long message</div>
+  <div class="s">Execution 2690 · 2026-11-10 20:06:50.699 UTC</div></div>
+  <span class="badge pass">PASS — all three KB topics addressed, urgent items escalated</span>
+</div>
+<div class="grid2">
+  <div>
+    <div class="card"><h3>1 · Input message</h3>
+      <dl class="kv"><dt>Sender</dt><dd>alex.torres@student.codis.edu</dd>
+      <dt>Subject</dt><dd>Dropped class, charge, and portal access all at once</dd>
+      <dt>Message ID</dt><dd class="mono">MSG-1794341210719-mcysw</dd></dl>
+      <div class="message" style="margin-top:8px">Hi, I have a few things going on and I&#x27;m not sure who to ask. First, I dropped my statistics class in week three because of a scheduling conflict with my new job, and I still see the full tuition charge on my account. I thought dropping in week three got me at least part of the money back. Second, ever since I dropped it, the student portal keeps kicking me back to the login screen with an error code and I can&#x27;t get into Canvas to check my other grades, so I also need my official transcript request to go through before a scholarship deadline on Friday. Finally, could you tell me what software I can install for free on my own laptop, because the lab closes at 9pm and I do most of my work after that? Sorry for the long message, I just wanted to get everything into one email.</div>
+    </div>
+    <div class="card" style="margin-top:14px"><h3>2 · AI classification</h3>
+      <dl class="kv"><dt>Category</dt><dd><b>billing</b></dd>
+      <dt>Confidence</dt><dd>55%
+        <div class="bar"><span style="width:55%"></span></div></dd>
+      <dt>Keywords</dt><dd>tuition, charge, dropped, portal, login</dd></dl>
+      <p style="margin-top:8px"><b>Reasoning:</b> The message mentions several issues, but the first and most specific concern is the full tuition charge after dropping a class and a possible refund, which is a billing matter. The portal/login error is a significant competing issue, so confidence is moderate.</p>
+    </div>
+    <div class="card" style="margin-top:14px"><h3>3 · Knowledge base matches</h3>
+      <table><tr><th>ID</th><th>Score</th><th>Question</th><th>Role</th></tr><tr><td><b>KB-07</b></td><td>1.00</td><td>What is the refund policy if I drop a class?</td><td>used</td></tr><tr><td><b>KB-08</b></td><td>0.98</td><td>What software can students install for free?</td><td>used</td></tr><tr><td><b>KB-11</b></td><td>0.98</td><td>How do I request an official transcript?</td><td>used</td></tr></table>
+    </div>
+  </div>
+  <div>
+    <div class="card"><h3>4 · Generated response</h3>
+      <dl class="kv"><dt>Subject</dt><dd>Re: Dropped class, charge, portal, and software</dd>
+      <dt>Tone</dt><dd>reassuring</dd>
+      <dt>Escalation</dt><dd>YES</dd>
+      <dt>KB used</dt><dd>KB-07, KB-08, KB-11</dd></dl>
+      <div class="message" style="margin-top:8px">Since you dropped in week three, you should receive a 50% refund; refunds return to the original payment method within 10 business days. I&#x27;m escalating the portal login error and your Friday transcript deadline to a specialist because both need account access. Once the portal works, order your official transcript through the National Student Clearinghouse under Records &gt; Transcripts: electronic is $8 and usually arrives within one business day, paper is $12 and takes 5-7 business days. For free software, use software.codis.edu with your campus account to get Microsoft 365, JetBrains, GitHub Student Developer Pack, and VMware. Next step: please reply with the portal error code so I can attach it to the escalation.</div>
+    </div>
+    <div class="card" style="margin-top:14px"><h3>5 · Log entry (TH Interaction Log)</h3>
+      <dl class="kv">
+      <dt>Row ID</dt><dd>13</dd>
+      <dt>Timestamp</dt><dd>2026-11-10 20:06:50.719 UTC</dd>
+      <dt>Category</dt><dd>billing · 55%</dd>
+      <dt>KB matched</dt><dd>KB-07, KB-08, KB-11</dd>
+      <dt>KB used</dt><dd>KB-07, KB-08, KB-11</dd>
+      <dt>Match type</dt><dd>strong (top 1)</dd>
+      <dt>Delivery</dt><dd>delivered via webhook</dd>
+      <dt>Priority</dt><dd>high</dd>
+      <dt>Response time</dt><dd>14949 ms</dd>
+      <dt>Reply subject</dt><dd>Re: Dropped class, charge, portal, and software</dd>
+      </dl>
+      <p class="small" style="margin-top:8px">Original message, reasoning, AI response and response
+      status are all stored in the same row.</p>
+    </div>
+  </div>
+</div>
+<div class="callout" style="margin-top:16px"><b>What happened:</b> The multi-paragraph message covers a week-three drop and charge, a portal login error, a Friday transcript deadline, and free software. Triage chose <b>billing</b> (0.55) because the refund is the first and most specific concern. Search matched KB-07, KB-08, and KB-11 at 0.98–1.00, and the reply used all three: the 50% week-three refund, transcript ordering, and the free software list. It escalated the portal error and the Friday deadline. A single category cannot represent all four topics, which is a documented limitation.</div>
+</div></body></html>
